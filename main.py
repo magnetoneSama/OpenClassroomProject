@@ -8,10 +8,10 @@ from bs4 import BeautifulSoup as bs
 
 def scrap_page():
 
-    url_book = 'http://books.toscrape.com/catalogue/a-light-in-the-attic_1000/index.html'  # product_page_url#
+      # product_page_url#
     response = requests.get(url_book)
     if response.ok:
-        soup = bs(response.text)
+        soup = bs(response.text,'html.parser')
 
         product_Description = soup.find('div', {'id', 'content'}).findAll('p')[3]
 
@@ -38,7 +38,7 @@ def scrap_page():
 
         image_Link = str('https://books.toscrape.com/' + image['src'])
 
-        print(category)
+        print(url_book)
 
 
     else:
@@ -71,7 +71,17 @@ if response.ok:
             h3s = soup.findAll('h3')
             for h3 in h3s:
                 a = h3.find('a')
-                url_book='https://books.toscrape.com/catalogue/' + a['href']
+                url_book= 'https://books.toscrape.com/catalogue' + a['href'].replace('../../..','')
+                scrap_page()
+            p=1
+            response_P =requests.get(links_cat[i] + '/../page-' +str(p) +'.html' )
+            while response_P.ok:
+                soup = bs(response_P.text,'html.parser')
+                h3s = soup.findAll('h3')
+                for h3 in h3s:
+                    a = h3.find('a')
+                    url_book= 'https://books.toscrape.com/catalogue' + a['href'].replace('../../..','')
+                    scrap_page()
 
         else :
             print("c'est cassé")
