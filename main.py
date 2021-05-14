@@ -1,4 +1,4 @@
-# This is a sample Python script.
+
 
 import requests
 from bs4 import BeautifulSoup as bs
@@ -8,41 +8,56 @@ from bs4 import BeautifulSoup as bs
 
 def scrap_page():
 
-      # product_page_url#
-    response = requests.get(url_book)
-    if response.ok:
-        soup = bs(response.text,'html.parser')
+    with open('book_to_scrap.csv','w', newline='') as outf:
+        outf.writeraw('product_page_url ,universal_ product_code (upc), title, price_including_tax,price_excluding_tax, number_available,product_description,category,review_rating,image_url\n' )
+        response = requests.get(url_book)
+        if response.ok:
+            soup = bs(response.text,'html.parser')
 
-        product_Description = soup.find('div', {'id', 'content'}).findAll('p')[3]
+            product_Description = soup.find('div', {'id', 'content'}).findAll('p')[3].text
 
-        upc = soup.findAll('td')[0]
+            title =soup.find('h1').text  #title scrap on product_page#
 
-        if soup.find('p', {'class', 'star-rating One'}):
-            rating = "1 étoile"
+            upc = soup.findAll('td')[0].text  #universal_ product_code (upc) scrap on product_page#
 
-        elif soup.find('p', {'class', 'star-rating Two'}):
-            rating = "2 étoiles"
+            price_including_tax = soup.findAll('td')[3].text  #price_including_tax scrap on product_page#
 
-        elif soup.find('p', {'class', 'star-rating Three'}):
-            rating = "3 étoiles"
+            price_excluding_tax = soup.findAll('td')[2].text  # price_excluding_tax  scrap on product_page#
 
-        elif soup.find('p', {'class', 'star-rating Four'}):
-            rating = "4 étoiles"
-
-        elif soup.find('p', {'class', 'star-rating Five'}):
-            rating = "5 étoiles"
-
-        category = soup.find('ul', {'class': 'breadcrumb'}).findAll('a')[2].text
-
-        image = soup.find('div', {'class': 'item active'}).find({'img': 'src'})
-
-        image_Link = str('https://books.toscrape.com/' + image['src'])
-
-        print(url_book)
+            Availability = soup.findAll('td')[5].text  #Availability scrap on product_page#
 
 
-    else:
-        print(str("c'est cassé"))
+            if soup.find('p', {'class', 'star-rating One'}):
+                rating = "1 étoile"
+
+            elif soup.find('p', {'class', 'star-rating Two'}):
+                rating = "2 étoiles"
+
+            elif soup.find('p', {'class', 'star-rating Three'}):
+                rating = "3 étoiles"
+
+            elif soup.find('p', {'class', 'star-rating Four'}):
+                rating = "4 étoiles"
+
+            elif soup.find('p', {'class', 'star-rating Five'}):
+                rating = "5 étoiles"
+             #rewiew_rating scrap on product_page, i can optimize if and elif in dictionary#
+
+            category = soup.find('ul', {'class': 'breadcrumb'}).findAll('a')[2].text
+
+            image = soup.find('div', {'class': 'item active'}).find({'img': 'src'})
+
+            image_url = str('https://books.toscrape.com/' + image['src'])
+
+            outf.write(url_book +',' + upc + ',' + title.replace(',','.') +','+price_including_tax.replace(',','.')
+                       + ',' + price_excluding_tax.replace(',','.') + ','+ Availability +','+product_Description.replace(',',';')
+                       + ',' + rating + ',' + image_url +'\n' )
+            print("boucle csv")
+
+
+
+        else:
+            print(str("c'est cassé"))
 # for save links in CSV ot txt
 #with open('urls.txt or .csv','w') as file:
     #for link in links:
@@ -71,7 +86,7 @@ if response.ok:
             h3s = soup.findAll('h3')
             for h3 in h3s:
                 a = h3.find('a')
-                url_book= 'https://books.toscrape.com/catalogue' + a['href'].replace('../../..','')
+                url_book= 'https://books.toscrape.com/catalogue' + a['href'].replace('../../..','') # product_page_url scrap on category page#
                 scrap_page()
             p=1
             response_P =requests.get(links_cat[i] + '/../page-' +str(p) +'.html' )
