@@ -1,15 +1,19 @@
-
-
+import csv
 import requests
 from bs4 import BeautifulSoup as bs
-
-
 ##vérifier l'installation pip -m pour requests et beautifulsoup4##
 
-def scrap_page():
+links_cat =[]
+urlBook=[]
+url = 'http://books.toscrape.com/'
+url_book ='https://books.toscrape.com/catalogue/a-light-in-the-attic_1000/index.html'
 
-    with open('book_to_scrap.csv','w', newline='') as outf:
-        outf.writeraw('product_page_url ,universal_ product_code (upc), title, price_including_tax,price_excluding_tax, number_available,product_description,category,review_rating,image_url\n' )
+def scrapPage():
+
+    with open('book_to_scrap.csv','w') as outf:
+
+        outf.write('product_page_url ,universal_ product_code (upc), title, price_including_tax,price_excluding_tax, number_available,product_description,category,review_rating,image_url\n' )
+
         response = requests.get(url_book)
         if response.ok:
             soup = bs(response.text,'html.parser')
@@ -53,11 +57,66 @@ def scrap_page():
                        + ',' + price_excluding_tax.replace(',','.') + ','+ Availability +','+product_Description.replace(',',';')
                        + ',' + rating + ',' + image_url +'\n' )
             print("boucle csv")
-
-
-
         else:
-            print(str("c'est cassé"))
+            print('p')
+
+def scrapCat():
+    response = requests.get(url)
+    if response.ok:
+        soup = bs(response.text, 'html.parser')
+        lis = soup.find('ul', {'class': 'nav nav-list'}).find('ul').findAll('li')
+        for li in lis:
+            a = li.find('a')
+            link_cat = a['href']
+            links_cat.append(str(url + link_cat))
+    else:
+        print("c'est cassé")
+
+def scrapUrlBook():
+    response = requests.get(UrlPage)
+    if response.ok:
+        soup = bs(response.text,'html.parser')
+        h3s = soup.findAll('h3')
+        for h3 in h3s:
+            a = h3.find('a')
+            url_book= 'https://books.toscrape.com/catalogue' + a['href'].replace('../../..','') # product_page_url scrap on category page#
+            urlBook.append(url_book)
+
+    else:
+        print("c'est cassé")
+
+
+def scrapRating(url_book):
+    ratings = {'One':'1 étoile','Two':'2 étoiles','Three':'3 étoiles','Four':'4 étoiles','Five':'5 étoiles',}
+    html_rating=['One','two','Three','Four','Five']
+    response = requests.get(url_book)
+    if response.ok:
+
+        soup = bs(response.text, 'html.parser')
+        test =soup.find('p', {'class', 'star-rating'})
+        rating = ratings.get(soup.find('p', 'class','star' ))
+
+        print(test)
+    else:
+        print('erreur')
+
+def inutile():
+    response_P =requests.get(links_cat[i] + '/../page-' +str(p) +'.html' )
+    while response_P.ok:
+                soup = bs(response_P.text,'html.parser')
+                h3s = soup.findAll('h3')
+                for h3 in h3s:
+                    a = h3.find('a')
+                    url_book= 'https://books.toscrape.com/catalogue' + a['href'].replace('../../..','')
+
+
+scrapRating(url_book)
+
+
+
+
+
+
 # for save links in CSV ot txt
 #with open('urls.txt or .csv','w') as file:
     #for link in links:
@@ -67,38 +126,3 @@ def scrap_page():
 #with open('urls.txt or .csv','r') as file:
     #for link in links:
     #file.write(link +'\n')
-
-url = 'http://books.toscrape.com/'                                                                 
-links_cat =[]
-response = requests.get(url)
-if response.ok:
-    soup = bs(response.text,'html.parser')
-    lis = soup.find('ul', {'class': 'nav nav-list'}).find('ul').findAll('li')
-    for li in lis:
-        a = li.find('a')
-        link_cat=a['href']
-        links_cat.append(str(url + link_cat))
-    print(links_cat)
-    for i in range(len(links_cat)):
-        response = requests.get(links_cat[i])
-        if response.ok:
-            soup = bs(response.text,'html.parser')
-            h3s = soup.findAll('h3')
-            for h3 in h3s:
-                a = h3.find('a')
-                url_book= 'https://books.toscrape.com/catalogue' + a['href'].replace('../../..','') # product_page_url scrap on category page#
-                scrap_page()
-            p=1
-            response_P =requests.get(links_cat[i] + '/../page-' +str(p) +'.html' )
-            while response_P.ok:
-                soup = bs(response_P.text,'html.parser')
-                h3s = soup.findAll('h3')
-                for h3 in h3s:
-                    a = h3.find('a')
-                    url_book= 'https://books.toscrape.com/catalogue' + a['href'].replace('../../..','')
-                    scrap_page()
-
-        else :
-            print("c'est cassé")
-else:
-    print("c'est cassé")
