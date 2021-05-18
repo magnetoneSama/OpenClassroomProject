@@ -93,10 +93,16 @@ def scrapRating(url_book):
     if response.ok:
 
         soup = bs(response.text, 'html.parser')
-        test =soup.find('p', {'class', 'star-rating'})
-        rating = ratings.get(soup.find('p', 'class','star' ))
+        p=soup.find('p', {'class', 'star-rating'})
+        rating= ratings[p['class'][1]]
+        print(rating)
 
-        print(test)
+
+
+
+
+
+
     else:
         print('erreur')
 
@@ -110,7 +116,7 @@ def inutile():
                     url_book= 'https://books.toscrape.com/catalogue' + a['href'].replace('../../..','')
 
 
-scrapRating(url_book)
+scrapRating('https://books.toscrape.com/catalogue/tipping-the-velvet_999/index.html')
 
 
 
