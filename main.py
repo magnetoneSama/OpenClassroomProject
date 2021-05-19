@@ -1,4 +1,4 @@
-import csv
+
 import requests
 from bs4 import BeautifulSoup as bs
 ##vérifier l'installation pip -m pour requests et beautifulsoup4##
@@ -9,39 +9,49 @@ url = 'http://books.toscrape.com/'
 url_book ='https://books.toscrape.com/catalogue/a-light-in-the-attic_1000/index.html'
 
 def scrapPage():
+    response = requests.get(url_book)
+    if response.ok:
 
-    with open('book_to_scrap.csv','w') as outf:
+        soup = bs(response.text,'html.parser')
 
-        outf.write('product_page_url ,universal_ product_code (upc), title, price_including_tax,price_excluding_tax, number_available,product_description,category,review_rating,image_url\n' )
+        product_Description = soup.find('div', {'id', 'content'}).findAll('p')[3].text
 
-        response = requests.get(url_book)
-        if response.ok:
-            soup = bs(response.text,'html.parser')
+        title =soup.find('h1').text  #title scrap on product_page#
 
-            product_Description = soup.find('div', {'id', 'content'}).findAll('p')[3].text
+        upc = soup.findAll('td')[0].text  #universal_ product_code (upc) scrap on product_page#
 
-            title =soup.find('h1').text  #title scrap on product_page#
+        price_including_tax = soup.findAll('td')[3].text  #price_including_tax scrap on product_page#
 
-            upc = soup.findAll('td')[0].text  #universal_ product_code (upc) scrap on product_page#
+        price_excluding_tax = soup.findAll('td')[2].text  # price_excluding_tax  scrap on product_page#
 
-            price_including_tax = soup.findAll('td')[3].text  #price_including_tax scrap on product_page#
+        Availability = soup.findAll('td')[5].text  #Availability scrap on product_page#
 
-            price_excluding_tax = soup.findAll('td')[2].text  # price_excluding_tax  scrap on product_page#
+        category = soup.find('ul', {'class': 'breadcrumb'}).findAll('a')[2].text
 
-            Availability = soup.findAll('td')[5].text  #Availability scrap on product_page#
+        image = soup.find('div', {'class': 'item active'}).find({'img': 'src'})
 
-            category = soup.find('ul', {'class': 'breadcrumb'}).findAll('a')[2].text
+        image_url = str('https://books.toscrape.com/' + image['src'])
 
-            image = soup.find('div', {'class': 'item active'}).find({'img': 'src'})
 
-            image_url = str('https://books.toscrape.com/' + image['src'])
+        rating = scrapRating()
 
-            outf.write(url_book +',' + upc + ',' + title.replace(',','.') +','+price_including_tax.replace(',','.')
-                       + ',' + price_excluding_tax.replace(',','.') + ','+ Availability +','+product_Description.replace(',',';')
-                       + ',' + rating + ',' + image_url +'\n' )
-            print("boucle csv")
-        else:
-            print('p')
+
+
+
+
+        outf.write(url_book +',' +
+                   upc + ',' +
+                   title.replace(',','.') +','+
+                   price_including_tax.replace(',','.') + ',' +
+                   price_excluding_tax.replace(',','.') + ','+
+                   Availability +','+
+                   product_Description.replace(',',';')+ ',' +
+                   category + ',' +
+                   rating + ',' +
+                   image_url +'\n' )
+        print("boucle csv")
+    else:
+        print('p')
 
 def scrapCat():
     response = requests.get(url)
@@ -56,6 +66,7 @@ def scrapCat():
         print("c'est cassé")
 
 def scrapUrlBook(link_cat):
+
     response = requests.get(link_cat)
     if response.ok:
         soup = bs(response.text,'html.parser')
@@ -69,28 +80,21 @@ def scrapUrlBook(link_cat):
         print("c'est cassé")
 
 
-def scrapRating(url_book):
+def scrapRating():
     ratings = {'One':'1 étoile','Two':'2 étoiles','Three':'3 étoiles','Four':'4 étoiles','Five':'5 étoiles',}
-    html_rating=['One','two','Three','Four','Five']
+
     response = requests.get(url_book)
     if response.ok:
 
         soup = bs(response.text, 'html.parser')
         p=soup.find('p', {'class', 'star-rating'})
-        rating= ratings[p['class'][1]]
-        print(rating)
+        rating = ratings[p['class'][1]]
+        return rating
 
     else:
         print('erreur')
 
-def inutile():
-    response_P =requests.get(links_cat[i] + '/../page-' +str(p) +'.html' )
-    while response_P.ok:
-                soup = bs(response_P.text,'html.parser')
-                h3s = soup.findAll('h3')
-                for h3 in h3s:
-                    a = h3.find('a')
-                    url_book= 'https://books.toscrape.com/catalogue' + a['href'].replace('../../..','')
+
 
 
 
@@ -101,10 +105,13 @@ def scrapUrlBooks():
         p = 2
         link_cat_P = link_cat + '/../page-' + str(p) + '.html'
         response = requests.get(link_cat_P)
-        if response.ok:
+        while response.ok:
+
             scrapUrlBook(link_cat_P)
             p = p + 1
             link_cat_P = link_cat + '/../page-' + str(p) + '.html'
+            response = requests.get(link_cat_P)
+
 
 
 
@@ -117,16 +124,25 @@ while True:
     command = input( 'Voulez-vous lancer le programme o/n ?' )
     if command == str('o'):
         print('on scrap !')
-        scrapCat()
-        for link_cat in links_cat:
-            scrapUrlBook(link_cat)
-            p = 2
-            link_cat_P = link_cat + '/../page-' + str(p) + '.html'
-            response = requests.get(link_cat_P)
-            if response.ok:
-                scrapUrlBook(link_cat_P)
-                p = p + 1
-                link_cat_P = link_cat + '/../page-' + str(p) + '.html'
+        scrapUrlBooks()
+        with open('book_to_scrap.csv', 'w',encoding="utf-8") as outf:
+
+            outf.write(
+                'product_page_url,'
+                'universal_ product_code (upc),'
+                'title,'
+                'price_including_tax,price_excluding_tax,'
+                'number_available,product_description,'
+                'category,'
+                'review_rating,'
+                'image_url'
+                '\n')
+            for url_book in urlBooks:
+                scrapPage()
+
+
+
+
 
 
 
