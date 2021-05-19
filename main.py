@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup as bs
 ##vérifier l'installation pip -m pour requests et beautifulsoup4##
 
 links_cat =[]
-urlBook=[]
+urlBooks=[]
 url = 'http://books.toscrape.com/'
 url_book ='https://books.toscrape.com/catalogue/a-light-in-the-attic_1000/index.html'
 
@@ -30,23 +30,6 @@ def scrapPage():
 
             Availability = soup.findAll('td')[5].text  #Availability scrap on product_page#
 
-
-            if soup.find('p', {'class', 'star-rating One'}):
-                rating = "1 étoile"
-
-            elif soup.find('p', {'class', 'star-rating Two'}):
-                rating = "2 étoiles"
-
-            elif soup.find('p', {'class', 'star-rating Three'}):
-                rating = "3 étoiles"
-
-            elif soup.find('p', {'class', 'star-rating Four'}):
-                rating = "4 étoiles"
-
-            elif soup.find('p', {'class', 'star-rating Five'}):
-                rating = "5 étoiles"
-             #rewiew_rating scrap on product_page, i can optimize if and elif in dictionary#
-
             category = soup.find('ul', {'class': 'breadcrumb'}).findAll('a')[2].text
 
             image = soup.find('div', {'class': 'item active'}).find({'img': 'src'})
@@ -67,20 +50,20 @@ def scrapCat():
         lis = soup.find('ul', {'class': 'nav nav-list'}).find('ul').findAll('li')
         for li in lis:
             a = li.find('a')
-            link_cat = a['href']
-            links_cat.append(str(url + link_cat))
+            link_cat = str(url) + a['href']
+            links_cat.append(link_cat)
     else:
         print("c'est cassé")
 
-def scrapUrlBook():
-    response = requests.get(UrlPage)
+def scrapUrlBook(link_cat):
+    response = requests.get(link_cat)
     if response.ok:
         soup = bs(response.text,'html.parser')
         h3s = soup.findAll('h3')
         for h3 in h3s:
             a = h3.find('a')
             url_book= 'https://books.toscrape.com/catalogue' + a['href'].replace('../../..','') # product_page_url scrap on category page#
-            urlBook.append(url_book)
+            urlBooks.append(url_book)
 
     else:
         print("c'est cassé")
@@ -97,12 +80,6 @@ def scrapRating(url_book):
         rating= ratings[p['class'][1]]
         print(rating)
 
-
-
-
-
-
-
     else:
         print('erreur')
 
@@ -116,7 +93,56 @@ def inutile():
                     url_book= 'https://books.toscrape.com/catalogue' + a['href'].replace('../../..','')
 
 
-scrapRating('https://books.toscrape.com/catalogue/tipping-the-velvet_999/index.html')
+
+def scrapUrlBooks():
+    scrapCat()
+    for link_cat in links_cat:
+        scrapUrlBook(link_cat)
+        p = 2
+        link_cat_P = link_cat + '/../page-' + str(p) + '.html'
+        response = requests.get(link_cat_P)
+        if response.ok:
+            scrapUrlBook(link_cat_P)
+            p = p + 1
+            link_cat_P = link_cat + '/../page-' + str(p) + '.html'
+
+
+
+
+
+
+
+
+while True:
+    command = input( 'Voulez-vous lancer le programme o/n ?' )
+    if command == str('o'):
+        print('on scrap !')
+        scrapCat()
+        for link_cat in links_cat:
+            scrapUrlBook(link_cat)
+            p = 2
+            link_cat_P = link_cat + '/../page-' + str(p) + '.html'
+            response = requests.get(link_cat_P)
+            if response.ok:
+                scrapUrlBook(link_cat_P)
+                p = p + 1
+                link_cat_P = link_cat + '/../page-' + str(p) + '.html'
+
+
+
+
+
+
+
+    elif command == str('n'):
+        print ("c'est vous qui voyez !")
+
+    else:
+        print("j'ai pas compris votre demande ..")
+
+
+
+
 
 
 
