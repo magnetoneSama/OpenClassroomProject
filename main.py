@@ -1,48 +1,169 @@
-# This is a sample Python script.
-
 import requests
 from bs4 import BeautifulSoup as bs
-
-
 ##vérifier l'installation pip -m pour requests et beautifulsoup4##
 
-def scrap_page():
+links_cat =[]
+urlBooks=[]
+url = 'http://books.toscrape.com/'
+url_book ='https://books.toscrape.com/catalogue/a-light-in-the-attic_1000/index.html'
 
-    url_book = 'http://books.toscrape.com/catalogue/a-light-in-the-attic_1000/index.html'  # product_page_url#
+def scrapPage():
     response = requests.get(url_book)
     if response.ok:
-        soup = bs(response.text)
 
-        product_Description = soup.find('div', {'id', 'content'}).findAll('p')[3]
+        soup = bs(response.text,'html.parser')
 
-        upc = soup.findAll('td')[0]
+        product_Description = soup.find('div', {'id', 'content'}).findAll('p')[3].text
 
-        if soup.find('p', {'class', 'star-rating One'}):
-            rating = "1 étoile"
+        title =soup.find('h1').text  #title scrap on product_page#
 
-        elif soup.find('p', {'class', 'star-rating Two'}):
-            rating = "2 étoiles"
+        upc = soup.findAll('td')[0].text  #universal_ product_code (upc) scrap on product_page#
 
-        elif soup.find('p', {'class', 'star-rating Three'}):
-            rating = "3 étoiles"
+        price_including_tax = soup.findAll('td')[3].text  #price_including_tax scrap on product_page#
 
-        elif soup.find('p', {'class', 'star-rating Four'}):
-            rating = "4 étoiles"
+        price_excluding_tax = soup.findAll('td')[2].text  # price_excluding_tax  scrap on product_page#
 
-        elif soup.find('p', {'class', 'star-rating Five'}):
-            rating = "5 étoiles"
+        Availability = soup.findAll('td')[5].text  #Availability scrap on product_page#
 
         category = soup.find('ul', {'class': 'breadcrumb'}).findAll('a')[2].text
 
         image = soup.find('div', {'class': 'item active'}).find({'img': 'src'})
 
-        image_Link = str('https://books.toscrape.com/' + image['src'])
+        image_url = str('https://books.toscrape.com/' + image['src'])
 
-        print(category)
 
+        rating = scrapRating()
+
+
+
+
+
+        outf.write(url_book +',' +
+                   upc + ',' +
+                   title.replace(',','.') +','+
+                   price_including_tax.replace(',','.') + ',' +
+                   price_excluding_tax.replace(',','.') + ','+
+                   Availability +','+
+                   product_Description.replace(',',';')+ ',' +
+                   category + ',' +
+                   rating + ',' +
+                   image_url +'\n' )
+        print("boucle csv")
+    else:
+        print('p')
+
+def scrapCat():
+    response = requests.get(url)
+    if response.ok:
+        soup = bs(response.text, 'html.parser')
+        lis = soup.find('ul', {'class': 'nav nav-list'}).find('ul').findAll('li')
+        for li in lis:
+            a = li.find('a')
+            link_cat = str(url) + a['href']
+            links_cat.append(link_cat)
+    else:
+        print("c'est cassé")
+
+def scrapUrlBook(link_cat):
+
+    response = requests.get(link_cat)
+    if response.ok:
+        soup = bs(response.text,'html.parser')
+        h3s = soup.findAll('h3')
+        for h3 in h3s:
+            a = h3.find('a')
+            url_book= 'https://books.toscrape.com/catalogue' + a['href'].replace('../../..','') # product_page_url scrap on category page#
+            urlBooks.append(url_book)
 
     else:
-        print(str("c'est cassé"))
+        print("c'est cassé")
+
+
+def scrapRating():
+    ratings = {'One':'1 étoile','Two':'2 étoiles','Three':'3 étoiles','Four':'4 étoiles','Five':'5 étoiles',}
+
+    response = requests.get(url_book)
+    if response.ok:
+
+        soup = bs(response.text, 'html.parser')
+        p=soup.find('p', {'class', 'star-rating'})
+        rating = ratings[p['class'][1]]
+        return rating
+
+    else:
+        print('erreur')
+
+
+
+
+
+def scrapUrlBooks():
+    scrapCat()
+    for link_cat in links_cat:
+        scrapUrlBook(link_cat)
+        p = 2
+        link_cat_P = link_cat + '/../page-' + str(p) + '.html'
+        response = requests.get(link_cat_P)
+        while response.ok:
+
+            scrapUrlBook(link_cat_P)
+            p = p + 1
+            link_cat_P = link_cat + '/../page-' + str(p) + '.html'
+            response = requests.get(link_cat_P)
+
+
+
+
+
+
+
+
+
+while True:
+    command = input( 'Voulez-vous lancer le programme o/n ?' )
+    if command == str('o'):
+        print('on scrap !')
+        scrapUrlBooks()
+        with open('book_to_scrap.csv', 'w',encoding="utf-8") as outf:
+
+            outf.write(
+                'product_page_url,'
+                'universal_ product_code (upc),'
+                'title,'
+                'price_including_tax,price_excluding_tax,'
+                'number_available,product_description,'
+                'category,'
+                'review_rating,'
+                'image_url'
+                '\n')
+            for url_book in urlBooks:
+                scrapPage()
+
+
+
+
+
+
+
+
+
+
+
+    elif command == str('n'):
+        print ("c'est vous qui voyez !")
+
+    else:
+        print("j'ai pas compris votre demande ..")
+
+
+
+
+
+
+
+
+
+
 # for save links in CSV ot txt
 #with open('urls.txt or .csv','w') as file:
     #for link in links:
@@ -52,28 +173,3 @@ def scrap_page():
 #with open('urls.txt or .csv','r') as file:
     #for link in links:
     #file.write(link +'\n')
-
-url = 'http://books.toscrape.com/'                                                                 
-links_cat =[]
-response = requests.get(url)
-if response.ok:
-    soup = bs(response.text,'html.parser')
-    lis = soup.find('ul', {'class': 'nav nav-list'}).find('ul').findAll('li')
-    for li in lis:
-        a = li.find('a')
-        link_cat=a['href']
-        links_cat.append(str(url + link_cat))
-    print(links_cat)
-    for i in range(len(links_cat)):
-        response = requests.get(links_cat[i])
-        if response.ok:
-            soup = bs(response.text,'html.parser')
-            h3s = soup.findAll('h3')
-            for h3 in h3s:
-                a = h3.find('a')
-                url_book='https://books.toscrape.com/catalogue/' + a['href']
-
-        else :
-            print("c'est cassé")
-else:
-    print("c'est cassé")
