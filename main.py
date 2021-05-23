@@ -4,8 +4,9 @@ from bs4 import BeautifulSoup as bs
 
 links_cat =[]
 urlBooks=[]
+image_urls =['https://books.toscrape.com/../../media/cache/6d/41/6d418a73cc7d4ecfd75ca11d854041db.jpg','https://books.toscrape.com/media/cache/fe/72/fe72f0532301ec28892ae79a629a293c.jpg']
 url = 'http://books.toscrape.com/'
-url_book ='https://books.toscrape.com/catalogue/a-light-in-the-attic_1000/index.html'
+
 
 def scrapPage():
     response = requests.get(url_book)
@@ -30,6 +31,7 @@ def scrapPage():
         image = soup.find('div', {'class': 'item active'}).find({'img': 'src'})
 
         image_url = str('https://books.toscrape.com/' + image['src'])
+        image_urls.append(image_url)
 
 
         rating = scrapRating()
@@ -48,7 +50,7 @@ def scrapPage():
                    category + ',' +
                    rating + ',' +
                    image_url +'\n' )
-        print("boucle csv")
+
     else:
         print('p')
 
@@ -120,7 +122,7 @@ def scrapUrlBooks():
 
 
 while True:
-    command = input( 'Voulez-vous lancer le programme o/n ?' )
+    command = input( 'souhaitez-vous lancer le programme o/n ?' )
     if command == str('o'):
         print('on scrap !')
         scrapUrlBooks()
@@ -138,6 +140,15 @@ while True:
                 '\n')
             for url_book in urlBooks:
                 scrapPage()
+        command = input( 'Souhaitez-vous télécharger les images o/n ?' )
+        if command == str('o'):
+            for image_url in image_urls:
+                print('téléchargement de ',image_url)
+                r= requests.get(image_url)
+
+                with open('/images','wb') as outf:
+                    outf.write(r.content)
+
 
 
 
@@ -151,6 +162,14 @@ while True:
 
     elif command == str('n'):
         print ("c'est vous qui voyez !")
+        for image_url in image_urls:
+            print('téléchargement de ', image_url)
+            r = requests.get(image_url)
+            file_save ='F:\dossier script python\projet_2_Scraping\images\\'+ image_url.split('/')[-1]
+
+
+            with open(file_save, 'wb') as outf:
+                outf.write(r.content)
 
     else:
         print("j'ai pas compris votre demande ..")
