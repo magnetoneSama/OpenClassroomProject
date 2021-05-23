@@ -115,6 +115,15 @@ def scrapUrlBooks():
 
 
 
+def downloadPictures():
+    for image_url in image_urls:
+        print('téléchargement de ', image_url)
+        r = requests.get(image_url)
+        file_save = 'F:\dossier script python\projet_2_Scraping\images\\' + image_url.split('/')[-1]
+
+        with open(file_save, 'wb') as outf:
+            outf.write(r.content)
+
 
 
 
@@ -142,34 +151,13 @@ while True:
                 scrapPage()
         command = input( 'Souhaitez-vous télécharger les images o/n ?' )
         if command == str('o'):
-            for image_url in image_urls:
-                print('téléchargement de ',image_url)
-                r= requests.get(image_url)
-
-                with open('/images','wb') as outf:
-                    outf.write(r.content)
-
-
-
-
-
-
-
-
+            downloadPictures()
 
 
 
 
     elif command == str('n'):
         print ("c'est vous qui voyez !")
-        for image_url in image_urls:
-            print('téléchargement de ', image_url)
-            r = requests.get(image_url)
-            file_save ='F:\dossier script python\projet_2_Scraping\images\\'+ image_url.split('/')[-1]
-
-
-            with open(file_save, 'wb') as outf:
-                outf.write(r.content)
 
     else:
         print("j'ai pas compris votre demande ..")
