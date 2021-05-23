@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup as bs
 
 links_cat =[]
 urlBooks=[]
-image_urls =['https://books.toscrape.com/../../media/cache/6d/41/6d418a73cc7d4ecfd75ca11d854041db.jpg','https://books.toscrape.com/media/cache/fe/72/fe72f0532301ec28892ae79a629a293c.jpg']
+image_urls =[]
 url = 'http://books.toscrape.com/'
 
 
