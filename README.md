@@ -1,6 +1,6 @@
 # OpenClassroomProject N°2#
 
-# Pré-requis
+## Pré-requis
 
 
 Installez les modules essentiels au bon fonctionnement du programme:
