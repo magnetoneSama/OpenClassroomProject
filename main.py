@@ -1,11 +1,12 @@
 import requests
+import csv
 from bs4 import BeautifulSoup as bS
 
 # vérifier l'installation pip -m pour requests et beautifulsoup4 #
 
-
 image_urls = []
-url = "http://books.toscrape.com/"
+
+URL = "http://books.toscrape.com/"
 
 
 def scrap_page(url_book):
@@ -35,17 +36,20 @@ def scrap_page(url_book):
         image_urls.append(image_url)
 
         rating = scrap_rating(url_book)
-        with open("book_to_scrap.csv", "a", encoding="utf-8") as outf:
-            outf.write(url_book + "," +
-                       upc + "," +
-                       title.replace(",", ".") + "," +
-                       price_including_tax.replace(",", ".") + "," +
-                       price_excluding_tax.replace(",", ".") + "," +
-                       availability + "," +
-                       product_description.replace(",", ";") + "," +
-                       category + "," +
-                       rating + "," +
-                       image_url + "\n")
+        with open("book_to_scrap.csv", "a", encoding="utf-8", newline="") as outf:
+            writer = csv.writer(outf, delimiter=";", quoting=csv.QUOTE_MINIMAL)
+
+            writer.writerow([url_book,
+                             upc,
+                             title,
+                             price_including_tax,
+                             price_excluding_tax,
+                             availability,
+                             product_description,
+                             category,
+                             rating,
+                             image_url,
+                             "\n"])
 
     else:
         print("p")
@@ -53,13 +57,13 @@ def scrap_page(url_book):
 
 def scrap_cat():
     links_cat = []
-    response = requests.get(url)
+    response = requests.get(URL)
     if response.ok:
         soup = bS(response.text, "html.parser")
         lis = soup.find("ul", {"class": "nav nav-list"}).find("ul").findAll("li")
         for li in lis:
             a = li.find("a")
-            link_cat = str(url) + a["href"]
+            link_cat = str(URL) + a["href"]
             links_cat.append(link_cat)
         return links_cat
     else:
@@ -125,21 +129,24 @@ def download_pictures():
 
 def read_csv():
     url_books = scrap_url_books()
-    with open("book_to_scrap.csv","w", encoding="utf-8") as outf:
-        outf.write("product_page_url,"
-                   "universal_ product_code (upc),"
-                   "title,"
-                   "price_including_tax,price_excluding_tax,"
-                   "number_available,product_description,"
-                   "category,"
-                   "review_rating,"
-                   "image_url"
-                   "\n")
-        for url_book in url_books:
-            scrap_page(url_book)
+    with open("book_to_scrap.csv", "w", newline="") as outf:
+        writer = csv.writer(outf, delimiter=";", quoting=csv.QUOTE_MINIMAL)
+        writer.writerow(["product_page_url",
+                         "universal_ product_code (upc)",
+                         "title",
+                         "price_including_tax",
+                         "price_excluding_tax",
+                         "product_description",
+                         "category",
+                         "review_rating",
+                         "image_url"
+                         "\n"])
+    for url_book in url_books:
+        scrap_page(url_book)
 
 
 def main():
+
     while True:
         command = input("souhaitez-vous lancer le programme o/n ?")
         if command == "o":
