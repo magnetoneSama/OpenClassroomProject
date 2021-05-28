@@ -1,5 +1,11 @@
 # OpenClassroomProject N°2#
 
+## Description
+
+Ce programme a pour but de récupérer les informations de chaque livre du site [Books to Scrape](https://books.toscrape.com/) et de les compiler dans un fichien CSV, par la suite il propose à l'utilisateur si il souhaite stocker l'intégralité des images de couverture dans un dossier annexe.
+
+
+
 ## Pré-requis
 
 
@@ -17,7 +23,7 @@ Ou manuellement avec les 2 modules principaux qui sont "requests" et "beautifuls
 
 
 
-## lancer le programme
+## Lancer le programme
 
 
 	
