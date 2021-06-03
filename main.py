@@ -1,59 +1,36 @@
 import requests
+import os
 import csv
 from bs4 import BeautifulSoup as bS
 
 # vérifier l'installation pip -m pour requests et beautifulsoup4 #
 
-image_urls = []
 
 URL = "http://books.toscrape.com/"
 
 
 def scrap_page(url_book):
+    result = {}
     response = requests.get(url_book)
 
     if response.ok:
 
         soup = bS(response.text, "html.parser")
-
-        product_description = soup.find("div", {"id", "content"}).findAll("p")[3].text
-
-        title = soup.find("h1").text  # title scrap on product_page#
-
-        upc = soup.findAll("td")[0].text  # universal_ product_code (upc) scrap on product_page#
-
-        price_including_tax = soup.findAll("td")[3].text  # price_including_tax scrap on product_page#
-
-        price_excluding_tax = soup.findAll("td")[2].text  # price_excluding_tax  scrap on product_page#
-
-        availability = soup.findAll("td")[5].text  # Availability scrap on product_page#
-
-        category = soup.find("ul", {"class": "breadcrumb"}).findAll("a")[2].text
-
+        result["product_page_url"] = url_book
+        result["product_description"] = soup.find("div", {"id", "content"}).findAll("p")[3].text
+        result["title"] = soup.find("h1").text  # title scrap on product_page#
+        result["upc"] = soup.findAll("td")[0].text  # universal_ product_code (upc) scrap on product_page#
+        result["price_including_tax"] = soup.findAll("td")[3].text  # price_including_tax scrap on product_page#
+        result["price_excluding_tax"] = soup.findAll("td")[2].text  # price_excluding_tax  scrap on product_page#
+        result["availability"] = soup.findAll("td")[5].text  # Availability scrap on product_page#
+        result["category"] = soup.find("ul", {"class": "breadcrumb"}).findAll("a")[2].text
         image = soup.find("div", {"class": "item active"}).find({"img": "src"})
-
-        image_url = str("https://books.toscrape.com/" + image["src"])
-        image_urls.append(image_url)
-
-        rating = scrap_rating(url_book)
-        with open("book_to_scrap.csv", "a", encoding="utf-8", newline="") as outf:
-            writer = csv.writer(outf, delimiter=";", quoting=csv.QUOTE_MINIMAL)
-
-            writer.writerow([url_book,
-                             upc,
-                             title,
-                             price_including_tax,
-                             price_excluding_tax,
-                             availability,
-                             product_description,
-                             category,
-                             rating,
-                             image_url,
-                             "\n"])
+        result["image_url"] = str("https://books.toscrape.com/" + image["src"])
+        result["rating"] = scrap_rating(url_book)
 
     else:
         print("p")
-
+    return result
 
 def scrap_cat():
     links_cat = []
@@ -101,62 +78,77 @@ def scrap_rating(url_book):
         print("erreur")
 
 
-def scrap_url_books():
+def scrap_url_books(link_cat):
     url_books = []
-    links_cat = scrap_cat()
-    for link_cat in links_cat:
-        url_books.extend(scrap_url_book(link_cat))
-        p = 2
+    url_books.extend(scrap_url_book(link_cat))
+    p = 2
+    link_cat_p = link_cat + "/../page-" + str(p) + ".html"
+    response = requests.get(link_cat_p)
+    while response.ok:
+        url_books.extend(scrap_url_book(link_cat_p))
+        p = p + 1
         link_cat_p = link_cat + "/../page-" + str(p) + ".html"
         response = requests.get(link_cat_p)
-        while response.ok:
-            url_books.extend(scrap_url_book(link_cat_p))
-            p = p + 1
-            link_cat_p = link_cat + "/../page-" + str(p) + ".html"
-            response = requests.get(link_cat_p)
     return url_books
 
 
-def download_pictures():
-    for image_url in image_urls:
-        print("téléchargement de ", image_url)
-        r = requests.get(image_url)
-        file_save = str("F:\\dossier script python\\projet_2_Scraping\\images\\" + image_url.split("/")[-1])
+def download_pictures(image_url):
+    print("téléchargement de ", image_url)
+    r = requests.get(image_url)
+    file_save = str("F:\\dossier script python\\projet_2_Scraping\\images\\" + image_url.split("/")[-1])
 
-        with open(file_save, "wb") as outf:
-            outf.write(r.content)
+    with open(file_save, "wb") as outf:
+        outf.write(r.content)
 
 
-def read_csv():
-    url_books = scrap_url_books()
-    with open("book_to_scrap.csv", "w", newline="") as outf:
+def write_csv(book_data):
+
+    with open("test\\book_to_scrap.csv", "w", encoding="utf-8", newline="") as outf:
         writer = csv.writer(outf, delimiter=";", quoting=csv.QUOTE_MINIMAL)
         writer.writerow(["product_page_url",
                          "universal_ product_code (upc)",
                          "title",
                          "price_including_tax",
                          "price_excluding_tax",
+                         "number_available",
                          "product_description",
                          "category",
                          "review_rating",
                          "image_url"
-                         "\n"])
-    for url_book in url_books:
-        scrap_page(url_book)
+                         ])
+        for data in book_data:
+            writer.writerow([data["product_page_url"],
+                             data["upc"],
+                             data["title"],
+                             data["price_including_tax"],
+                             data["price_excluding_tax"],
+                             data["availability"],
+                             data["product_description"],
+                             data["category"],
+                             data["rating"],
+                             data["image_url"],
+                             ])
+
+
+
+
 
 
 def main():
-
     while True:
         command = input("souhaitez-vous lancer le programme o/n ?")
         if command == "o":
             print("on scrap !")
+            links_cat = scrap_cat()
+            for link_cat in links_cat:
+                url_books = []
+                book_data = []
+                url_books.extend(scrap_url_books(link_cat))
+                for url_book in url_books:
+                    data = (scrap_page(url_book))
+                    book_data.append(data)
+                write_csv(book_data)
 
-            read_csv()
-
-            command = input("Souhaitez-vous télécharger les images o/n ?")
-            if command == "o":
-                download_pictures()
 
         elif command == "n":
             print("c'est vous qui voyez !")
