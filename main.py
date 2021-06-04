@@ -32,6 +32,7 @@ def scrap_page(url_book):
         print("p")
     return result
 
+
 def scrap_cat():
     links_cat = []
     response = requests.get(URL)
@@ -92,18 +93,22 @@ def scrap_url_books(link_cat):
     return url_books
 
 
-def download_pictures(image_url):
-    print("téléchargement de ", image_url)
-    r = requests.get(image_url)
-    file_save = str("F:\\dossier script python\\projet_2_Scraping\\images\\" + image_url.split("/")[-1])
+def download_pictures(image_urls):
+    os.makedirs("images", exist_ok=True)
+    for image_url in image_urls:
+        print("téléchargement de ", image_url)
+        r = requests.get(image_url)
+        file_save = str("images\\" + image_url.split("/")[-1])
 
-    with open(file_save, "wb") as outf:
-        outf.write(r.content)
+        with open(file_save, "wb") as outf:
+            outf.write(r.content)
 
 
-def write_csv(book_data):
+def write_csv(book_data, repertoire):
+    os.makedirs(repertoire, exist_ok=True)
+    path = repertoire + "\\book_to_scrap.csv"
 
-    with open("test\\book_to_scrap.csv", "w", encoding="utf-8", newline="") as outf:
+    with open(path, "w", encoding="utf-8", newline="") as outf:
         writer = csv.writer(outf, delimiter=";", quoting=csv.QUOTE_MINIMAL)
         writer.writerow(["product_page_url",
                          "universal_ product_code (upc)",
@@ -130,15 +135,12 @@ def write_csv(book_data):
                              ])
 
 
-
-
-
-
 def main():
     while True:
         command = input("souhaitez-vous lancer le programme o/n ?")
         if command == "o":
             print("on scrap !")
+            images_url = []
             links_cat = scrap_cat()
             for link_cat in links_cat:
                 url_books = []
@@ -147,13 +149,14 @@ def main():
                 for url_book in url_books:
                     data = (scrap_page(url_book))
                     book_data.append(data)
-                write_csv(book_data)
-
-
+                    images_url.append(data["image_url"])
+                print(link_cat.split("/")[-2])
+                write_csv(book_data, link_cat.split("/")[-2])
+            download_pictures(images_url)
+            break
         elif command == "n":
             print("c'est vous qui voyez !")
             break
-
         else:
             print("j'ai pas compris votre demande ..")
 
