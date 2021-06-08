@@ -29,7 +29,7 @@ def scrap_page(url_book):
         result["rating"] = scrap_rating(response)
 
     else:
-        print("scrap_page error", url_book)
+        print("Code Erreur sur'response'", response)
     return result
 
 
@@ -45,7 +45,7 @@ def scrap_cat():
             links_cat.append(link_cat)
         return links_cat
     else:
-        print("erreur URL")
+        print("Code Erreur sur'response'", response)
 
 
 def scrap_url_book(link_cat):
@@ -61,7 +61,7 @@ def scrap_url_book(link_cat):
             url_books.append(url_book)
         return url_books
     else:
-        print("c'est cassé")
+        print("Code Erreur sur'response'", response)
 
 
 def scrap_rating(response):
@@ -86,11 +86,11 @@ def scrap_url_books(link_cat):
     return url_books
 
 
-def download_pictures(image_urls,folder):
+def download_pictures(image_urls, folder):
     path = os.path.join("BooksToScrape", folder, "images")
     os.makedirs(path, exist_ok=True)
     for image_url in image_urls:
-        print("téléchargement de ", image_url)
+        print("Téléchargement de ", image_url)
         r = requests.get(image_url)
         file_save = os.path.join(path, image_url.split("/")[-1])
 
@@ -99,10 +99,10 @@ def download_pictures(image_urls,folder):
 
 
 def write_csv(book_data, repertoire):
-    os.makedirs(repertoire, exist_ok=True)
-    path = os.path.join("BooksToScrape", repertoire, "book_to_scrap.csv")
-
-    with open(path, "w", encoding="utf-8", newline="") as outf:
+    path = os.path.join("BooksToScrape", repertoire)
+    os.makedirs(path, exist_ok=True)
+    path_csv = os.path.join(path, "book_to_scrap.csv")
+    with open(path_csv, "w", encoding="utf-8", newline="") as outf:
         writer = csv.writer(outf, delimiter=";", quoting=csv.QUOTE_MINIMAL)
         writer.writerow(["product_page_url",
                          "universal_ product_code (upc)",
@@ -131,9 +131,9 @@ def write_csv(book_data, repertoire):
 
 def main():
     while True:
-        command = input("souhaitez-vous lancer le programme o/n ?")
+        command = input("Souhaitez-vous lancer le programme o/n ?")
         if command == "o":
-            print("on scrap !")
+            print("On scrap !")
 
             links_cat = scrap_cat()
             for link_cat in links_cat:
@@ -148,15 +148,14 @@ def main():
                 folder = link_cat.split("/")[-2]
                 print(folder)
                 write_csv(book_data, folder)
-                download_pictures(images_url,folder)
+                download_pictures(images_url, folder)
             break
         elif command == "n":
-            print("c'est vous qui voyez !")
+            print("C'est vous qui voyez !")
             break
         else:
-            print("j'ai pas compris votre demande ..")
+            print("Je n'ai pas compris votre demande ..")
 
 
 if __name__ == "__main__":
     main()
-
