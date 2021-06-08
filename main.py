@@ -26,10 +26,10 @@ def scrap_page(url_book):
         result["category"] = soup.find("ul", {"class": "breadcrumb"}).findAll("a")[2].text
         image = soup.find("div", {"class": "item active"}).find({"img": "src"})
         result["image_url"] = str("https://books.toscrape.com/" + image["src"])
-        result["rating"] = scrap_rating(url_book)
+        result["rating"] = scrap_rating(response)
 
     else:
-        print("p")
+        print("scrap_page error", url_book)
     return result
 
 
@@ -45,7 +45,7 @@ def scrap_cat():
             links_cat.append(link_cat)
         return links_cat
     else:
-        print("c'est cassé")
+        print("erreur URL")
 
 
 def scrap_url_book(link_cat):
@@ -64,19 +64,12 @@ def scrap_url_book(link_cat):
         print("c'est cassé")
 
 
-def scrap_rating(url_book):
+def scrap_rating(response):
     ratings = {"One": "1 étoile", "Two": "2 étoiles", "Three": "3 étoiles", "Four": "4 étoiles", "Five": "5 étoiles"}
-
-    response = requests.get(url_book)
-    if response.ok:
-
-        soup = bS(response.text, "html.parser")
-        p = soup.find("p", {"class", "star-rating"})
-        rating = ratings[p["class"][1]]
-        return rating
-
-    else:
-        print("erreur")
+    soup = bS(response.text, "html.parser")
+    p = soup.find("p", {"class", "star-rating"})
+    rating = ratings[p["class"][1]]
+    return rating
 
 
 def scrap_url_books(link_cat):
@@ -93,12 +86,13 @@ def scrap_url_books(link_cat):
     return url_books
 
 
-def download_pictures(image_urls):
-    os.makedirs("images", exist_ok=True)
+def download_pictures(image_urls,folder):
+    path = os.path.join("BooksToScrape", folder, "images")
+    os.makedirs(path, exist_ok=True)
     for image_url in image_urls:
         print("téléchargement de ", image_url)
         r = requests.get(image_url)
-        file_save = str("images\\" + image_url.split("/")[-1])
+        file_save = os.path.join(path, image_url.split("/")[-1])
 
         with open(file_save, "wb") as outf:
             outf.write(r.content)
@@ -106,7 +100,7 @@ def download_pictures(image_urls):
 
 def write_csv(book_data, repertoire):
     os.makedirs(repertoire, exist_ok=True)
-    path = repertoire + "\\book_to_scrap.csv"
+    path = os.path.join("BooksToScrape", repertoire, "book_to_scrap.csv")
 
     with open(path, "w", encoding="utf-8", newline="") as outf:
         writer = csv.writer(outf, delimiter=";", quoting=csv.QUOTE_MINIMAL)
@@ -140,9 +134,10 @@ def main():
         command = input("souhaitez-vous lancer le programme o/n ?")
         if command == "o":
             print("on scrap !")
-            images_url = []
+
             links_cat = scrap_cat()
             for link_cat in links_cat:
+                images_url = []
                 url_books = []
                 book_data = []
                 url_books.extend(scrap_url_books(link_cat))
@@ -150,9 +145,10 @@ def main():
                     data = (scrap_page(url_book))
                     book_data.append(data)
                     images_url.append(data["image_url"])
-                print(link_cat.split("/")[-2])
-                write_csv(book_data, link_cat.split("/")[-2])
-            download_pictures(images_url)
+                folder = link_cat.split("/")[-2]
+                print(folder)
+                write_csv(book_data, folder)
+                download_pictures(images_url,folder)
             break
         elif command == "n":
             print("c'est vous qui voyez !")
@@ -164,12 +160,3 @@ def main():
 if __name__ == "__main__":
     main()
 
-# for save links in CSV ot txt
-# with open("urls.txt or .csv","w") as file:
-# for link in links:
-# file.write(link +"\n")
-
-# for import links in CSV ot txt
-# with open("urls.txt or .csv","r") as file:
-# for link in links:
-# file.write(link +"\n")
