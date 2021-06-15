@@ -39,11 +39,7 @@ Si le programme est correctement lancé, la fenêtre de dialogue suivante devrai
 
 Tapez la lettre "o" dans la console pour débuter le scraping ! Un message "on scrap !" devrait apparaitre pour vous informez que le programme s'éxécute correctement
 
-Attendez jusqu'à voir la fenêtre de dialogue suivante:
 
-	souhaitez-vous télécharger les images o/n ?
-
-Tapez la lettre "o" si vous souhaitez télécharger celles-ci
  
 
 
